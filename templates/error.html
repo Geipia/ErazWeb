@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Error</title>
     <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Ubuntu:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&display=swap" rel="stylesheet">
     <style>
         /* Custom style for positioning the alert */
         .alert {
@@ -13,9 +16,86 @@
             right: 20px;
             z-index: 1050; /* Ensure it's above other elements */
         }
+
+        .ubuntu-light {
+  font-family: "Ubuntu", sans-serif;
+  font-weight: 300;
+  font-style: normal;
+}
+
+.ubuntu-regular {
+  font-family: "Ubuntu", sans-serif;
+  font-weight: 400;
+  font-style: normal;
+}
+
+.ubuntu-medium {
+  font-family: "Ubuntu", sans-serif;
+  font-weight: 500;
+  font-style: normal;
+}
+
+.ubuntu-bold {
+  font-family: "Ubuntu", sans-serif;
+  font-weight: 700;
+  font-style: normal;
+}
+
+.ubuntu-light-italic {
+  font-family: "Ubuntu", sans-serif;
+  font-weight: 300;
+  font-style: italic;
+}
+
+.ubuntu-regular-italic {
+  font-family: "Ubuntu", sans-serif;
+  font-weight: 400;
+  font-style: italic;
+}
+
+.ubuntu-medium-italic {
+  font-family: "Ubuntu", sans-serif;
+  font-weight: 500;
+  font-style: italic;
+}
+
+.ubuntu-bold-italic {
+  font-family: "Ubuntu", sans-serif;
+  font-weight: 700;
+  font-style: italic;
+}
+
+body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background-color: #f8f9fa;
+    }
+    .error-container {
+      text-align: center;
+    }
+    .error-code {
+      font-size: 8rem;
+      font-weight: bold;
+    }
+    .error-message {
+      font-size: 1.5rem;
+    }
+    .btn-home {
+      margin-top: 20px;
+    }
     </style>
 </head>
 <body>
-    A fatal error has occured. PLease wait, then reload the main page.
+    <div class="container error-container">
+        <div class="row">
+          <div class="col">
+            <div class="error-code text-primary ubuntu-bold">Fatal</div>
+            <p class="error-message ubuntu-medium">A fatal error has occured.</p>
+            <a href="/" class="btn btn-primary btn-home ubuntu-regular">Go Back Home</a>
+          </div>
+        </div>
+      </div>
 </body>
 </html>
