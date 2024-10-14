@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eraz</title>
+    <!-- Intégration de Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f5f6f7;
+        }
+        .card {
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 12px;
+        }
+        .card-header {
+            background-color: #28a745; /* Couleur verte modifiée */
+            color: white;
+            font-weight: bold;
+        }
+        .btn-primary, .btn-outline-danger {
+            border-radius: 20px;
+        }
+    </style>
+</head>
+<body style="background-color: #d0d9cf;">
+    <div class="container mt-5">
+        <!-- Ajout du logo -->
+        <div class="text-center mb-4">
+            <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" style="max-width: 150px;">
+        </div>
+
+        <h1 class="text-center mb-4">Créateur d'Eraz</h1>
+
+        <!-- Bienvenue et déconnexion -->
+        <div class="d-flex justify-content-end mb-4">
+            <p>Bienvenue, utilisateur <strong>{{ session.user_id }}</strong></p>
+            <a href="{{ url_for('logout') }}" class="btn btn-outline-danger btn-sm ms-2">Déconnexion</a>
+        </div>
+
+        <div class="row">
+            <!-- Portefeuilles -->
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        Portefeuilles
+                    </div>
+                    <div class="card-body">
+                        <ul class="list-group mb-3">
+                            {% for wallet in wallets %}
+                                <li class="list-group-item">
+                                    <strong>ID:</strong> {{ wallet.wallet_id }} | <strong>Solde:</strong> {{ wallet.balance }}
+                                </li>
+                            {% endfor %}
+                        </ul>
+                        <form action="{{ url_for('create_wallet') }}" method="post">
+                            <button type="submit" class="btn btn-primary w-100">Créer Nouveau Portefeuille</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Transaction -->
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        Effectuer une Transaction
+                    </div>
+                    <div class="card-body">
+                        <form action="{{ url_for('transaction') }}" method="post">
+                            <div class="mb-3">
+                                <label for="sender_wallet_id" class="form-label">Portefeuille émetteur :</label>
+                                <select name="sender_wallet_id" id="sender_wallet_id" class="form-select" required>
+                                    {% for wallet in wallets %}
+                                        <option value="{{ wallet.wallet_id }}">{{ wallet.wallet_id }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="recipient_wallet_id" class="form-label">Portefeuille récepteur :</label>
+                                <input type="text" id="recipient_wallet_id" name="recipient_wallet_id" class="form-control" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="amount" class="form-label">Montant à envoyer :</label>
+                                <input type="number" id="amount" name="amount" class="form-control" step="0.01" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100">Envoyer</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Graphique Eraz -->
+        <div class="text-center mt-4">
+            <a href="{{ url_for('graph') }}" class="btn btn-secondary">Voir le Graphique de la valeur de l'Eraz</a>
+        </div>
+
+        <!-- Messages d'erreur ou d'information -->
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <div class="alert alert-info mt-4">
+                <ul class="mb-0">
+                    {% for message in messages %}
+                        <li>{{ message }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+        {% endwith %}
+
+        <!-- Blockchain -->
+        <div class="mt-5">
+            <div class="card">
+                <div class="card-header">
+                    Blockchain
+                </div>
+                <div class="card-body">
+                    <ul class="list-group">
+                        {% for block in blockchain|reverse %}
+                            <li class="list-group-item">
+                                <strong>ID:</strong> {{ block.eraz_id }} | <strong>Hash:</strong> {{ block.hash }} | <strong>Transactions:</strong> {{ block.transactions }}
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Intégration de Bootstrap JS et dépendances -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+
