@@ -438,8 +438,8 @@ def transaction():
         else:
             flash('Portefeuille introuvable.')
     return redirect(url_for('index'))
-    
-    
+
+
 @app.route('/get_difficulty', methods=['GET'])
 def get_difficulty():
     return {'difficulty': DIFFICULTY}, 200
@@ -471,6 +471,8 @@ def graph():
     graph_url = base64.b64encode(img.getvalue()).decode('utf8')
 
     return render_template('graph.html', graph_url=graph_url)
+
+
 
 @app.route('/error')
 def fatal_error():
