@@ -306,6 +306,20 @@ def index():
         return render_template('index.html', wallets=wallets.values(), blockchain=blockchain.chain)
     else:
         return redirect(url_for('login'))
+        
+        
+        
+@app.route('/developerhome')
+def developerhome():
+    if ERROR:
+        app.redirect('/error')
+        return
+    user_id = session.get('user_id')
+    if user_id:
+        wallets = wallet_manager.get_user_wallets(user_id)
+        return render_template('developerhome.html', wallets=wallets.values(), blockchain=blockchain.chain)
+    else:
+        return redirect(url_for('developer'))
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -322,6 +336,21 @@ def login():
         else:
             flash('Invalid credentials. Please try again.')
     return render_template('login.html')
+    
+@app.route('/developer', methods=['GET', 'POST'])
+def developer():
+    if ERROR:
+        app.redirect('/error')
+        return
+    if request.method == 'POST':
+        user_id = request.form['user_id']
+        password = request.form['password']
+        if user_manager.authenticate(user_id, password):
+            session['user_id'] = user_id
+            return redirect(url_for('developerhome'))
+        else:
+            flash('Invalid credentials. Please try again.')
+    return render_template('developer.html')
 
 
 @app.route('/logout')
@@ -438,8 +467,8 @@ def transaction():
         else:
             flash('Portefeuille introuvable.')
     return redirect(url_for('index'))
-
-
+    
+    
 @app.route('/get_difficulty', methods=['GET'])
 def get_difficulty():
     return {'difficulty': DIFFICULTY}, 200
@@ -471,8 +500,6 @@ def graph():
     graph_url = base64.b64encode(img.getvalue()).decode('utf8')
 
     return render_template('graph.html', graph_url=graph_url)
-
-
 
 @app.route('/error')
 def fatal_error():
