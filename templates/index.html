@@ -37,8 +37,17 @@
         .sortable-item { flex: 1 1 calc(50% - 1rem); }
 
         /* Responsive grid adjustments */
+        @media (max-width: 992px) {
+            .sortable-item { flex: 1 1 calc(50% - 1rem); }
+        }
         @media (max-width: 768px) {
             .sortable-item { flex: 1 1 100%; }
+        }
+
+        /* Additional custom media query */
+        @media (max-width: 576px) {
+            .btn-primary, .btn-secondary { font-size: 14px; padding: 10px; }
+            .card-header { font-size: 18px; }
         }
     </style>
 </head>
@@ -60,7 +69,7 @@
         <!-- Draggable Cards Section -->
         <div id="draggable-container" class="row sortable-list">
             <!-- Portefeuilles -->
-            <div class="col-md-6 sortable-item draggable-card">
+            <div class="col-lg-6 col-md-6 sortable-item draggable-card">
                 <div class="card">
                     <div class="card-header ubuntu-regular">Portefeuilles</div>
                     <div class="card-body">
@@ -79,7 +88,7 @@
             </div>
 
             <!-- Effectuer une Transaction -->
-            <div class="col-md-6 sortable-item draggable-card">
+            <div class="col-lg-6 col-md-6 sortable-item draggable-card">
                 <div class="card">
                     <div class="card-header ubuntu-bold">Effectuer une Transaction</div>
                     <div class="card-body">
