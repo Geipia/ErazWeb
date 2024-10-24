@@ -7,7 +7,7 @@ from consts import *
 from backend.backend_methods import *
 
 app = Flask(__name__)
-app.secret_key = 'your_secret_key'  # Changez cette clé secrète pour sécuriser les sessions
+app.secret_key = 'ef88e21a-31bb-4448-b9a4-c2f6759c2778'  # Changez cette clé secrète pour sécuriser les sessions
 
 
 ERROR = False
