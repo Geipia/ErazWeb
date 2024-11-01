@@ -127,21 +127,24 @@
             </div>
 
             <!-- Blockchain -->
-            <div class="col-12 sortable-item draggable-card">
-                <div class="card">
-                    <div class="card-header ubuntu-bold">Blockchain</div>
-                    <div class="card-body">
-                        <ul class="list-group">
-                            {% for block in blockchain|reverse %}
+             <!--Supprimé, accessible que par les devs-->
+             <!--
+                <div class="col-12 sortable-item draggable-card">
+                    <div class="card">
+                        <div class="card-header ubuntu-bold">Blockchain</div>
+                        <div class="card-body">
+                            <ul class="list-group">
+                                {% for block in blockchain|reverse %}
                                 <li class="list-group-item ubuntu-regular">
                                     <strong>ID:</strong> {{ block.eraz_id }} | <strong>Hash:</strong> {{ block.hash }} | <strong>Transactions:</strong> {{ block.transactions }}
                                 </li>
-                            {% endfor %}
-                        </ul>
+                                {% endfor %}
+                            </ul>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
+            -->
 
         <!-- Error or Info Messages -->
         {% with messages = get_flashed_messages() %}

@@ -5,11 +5,11 @@ import base64
 from backend.backend_db import *
 from consts import *
 from backend.backend_methods import *
+import functools
+
 
 app = Flask(__name__)
-app.secret_key = 'ef88e21a-31bb-4448-b9a4-c2f6759c2778'  # Changez cette clé secrète pour sécuriser les sessions
-
-
+app.secret_key = 'ef88e21a-31bb-4448-b9a4-c2f6759c2778'
 ERROR = False
 
 
@@ -26,10 +26,11 @@ def index():
     user_id = session.get('user_id')
     if user_id:
         wallets = wallet_manager.get_user_wallets(user_id)
-        return render_template('index.html', wallets=wallets.values(), blockchain=blockchain.chain)
+        # Ne plus montere la blockchain dans index, que dans developerhome
+        #return render_template('index.html', wallets=wallets.values(), blockchain=blockchain.chain)
+        return render_template('index.html', wallets=wallets.values())
     else:
         return redirect(url_for('login'))
-
 
 
 @app.route('/developerhome')
@@ -60,6 +61,7 @@ def login():
             flash('Invalid credentials. Please try again.')
     return render_template('login.html')
 
+
 @app.route('/developer', methods=['GET', 'POST'])
 def developer():
     if ERROR:
@@ -73,7 +75,7 @@ def developer():
             return redirect(url_for('developerhome'))
         else:
             flash('Invalid credentials. Please try again.')
-    return redirect(url_for('developerhome'))
+    return redirect(url_for('/'))
 
 
 @app.route('/logout')
@@ -116,6 +118,43 @@ def create_wallet():
         return redirect(url_for('login'))
 
 
+# Caché: plus rapide si on essaye de miner plusieurs fois le même Eraz
+@functools.lru_cache(maxsize=256)
+def is_eraz_valid(eraz_id, nonce, wallet_id) -> bool:
+    if eraz_id % 751953751953 == 0:
+        if blockchain.eraz_id_exists(eraz_id):
+            flash('Cet Eraz ID a déjà été miné.')
+            return False
+        elif blockchain.total_mined_eraz >= MAX_ERAZ:
+            flash('Le maximum de 21 millions d\'Eraz a été atteint.')
+            return False
+        elif not valid_solution(eraz_id, nonce):
+            flash(f'La solution est incorrecte. Essayez encore.')
+            return False
+        else:
+            wallet = wallet_manager.get_wallet(wallet_id)
+            if wallet:
+                reward = blockchain.get_current_reward()
+                # Vérifier que la récompense est positive
+                if reward <= 0:
+                    flash('Récompense invalide. Impossible de miner un nombre négatif ou nul d\'Eraz.')
+                    return False
+                else:
+                    wallet.deposit(reward)
+                    wallet_manager.save_wallets()
+                    new_block = Block(eraz_id, blockchain.get_last_block().hash)
+                    new_block.transactions.append(f"Eraz ID {eraz_id} miné par {wallet_id}, récompense: {reward}Eraz")
+                    blockchain.add_block(new_block, reward)
+                    update_eraz_value(reward)
+                    return True
+            else:
+                flash('Portefeuille non trouvé.')
+                return False
+    else:
+        flash('Eraz ID non valide. Doit être un multiple de 751953751953.')
+        return False
+
+
 @app.route('/mine', methods=['POST'])
 def mine():
     if ERROR:
@@ -127,36 +166,7 @@ def mine():
         eraz_id = int(request.form['eraz_id'])
         nonce = int(request.form['nonce'])
 
-        if eraz_id % 751953751953 == 0:
-            if blockchain.eraz_id_exists(eraz_id):
-                flash('Cet Eraz ID a déjà été miné.')
-            elif blockchain.total_mined_eraz >= MAX_ERAZ:
-                flash('Le maximum de 21 millions d\'Eraz a été atteint.')
-            elif not valid_solution(eraz_id, nonce):
-                flash(f'La solution est incorrecte. Essayez encore.')
-            else:
-                wallet = wallet_manager.get_wallet(wallet_id)
-                if wallet:
-                    reward = blockchain.get_current_reward()
-
-                    # Vérifier que la récompense est positive
-                    if reward <= 0:
-                        flash('Récompense invalide. Impossible de miner un nombre négatif ou nul d\'Eraz.')
-                    else:
-                        wallet.deposit(reward)
-                        wallet_manager.save_wallets()
-
-                        new_block = Block(eraz_id, blockchain.get_last_block().hash)
-                        new_block.transactions.append(f"Eraz ID {eraz_id} miné par {wallet_id}, récompense: {reward} Eraz")
-                        blockchain.add_block(new_block, reward)
-
-                        update_eraz_value(reward)
-
-                        return redirect(url_for('index'))
-                else:
-                    flash('Portefeuille non trouvé.')
-        else:
-            flash('Eraz ID non valide. Doit être un multiple de 751953751953.')
+        is_eraz_valid(eraz_id, nonce, wallet_id)
     return redirect(url_for('index'))
 
 
@@ -197,13 +207,13 @@ def get_difficulty():
     return {'difficulty': DIFFICULTY}, 200
 
 
-
 @app.route('/graph')
 def graph():
+    """Affiche un graphique de la valeur de l'Eraz au fil du temps."""
     if ERROR:
         app.redirect('/error')
         return
-    """Affiche un graphique de la valeur de l'Eraz au fil du temps."""
+    # Trop lent et inutile
     #update_eraz_value()  # Mettez à jour la valeur avant de tracer le graphique
     eraz_values = get_eraz_values()
     dates = [point[0] for point in eraz_values]
@@ -224,6 +234,7 @@ def graph():
 
     return render_template('graph.html', graph_url=graph_url)
 
+
 @app.route('/error')
 def fatal_error():
     return render_template('error.html')
@@ -234,4 +245,4 @@ if __name__ == '__main__':
     wallet_manager = WalletManager()
     blockchain = Blockchain()
     blockchain.load_chain()
-    app.run(debug=False, port = 5000)
+    app.run(debug=False, port=5000)
