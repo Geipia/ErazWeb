@@ -18,7 +18,7 @@ def set_error(value: bool):
     ERROR = value
 
 
-@app.route('/')
+@app.route('/', methods=['GET'])
 def index():
     if ERROR:
         app.redirect('/error')
@@ -33,7 +33,7 @@ def index():
         return redirect(url_for('login'))
 
 
-@app.route('/developerhome')
+@app.route('/developerhome', methods=['GET'])
 def developerhome():
     if ERROR:
         app.redirect('/error')
@@ -75,7 +75,8 @@ def developer():
             return redirect(url_for('developerhome'))
         else:
             flash('Invalid credentials. Please try again.')
-    return redirect(url_for('/'))
+    else:
+        return redirect(url_for('index'))
 
 
 @app.route('/logout')
