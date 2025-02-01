@@ -6,12 +6,12 @@ from app_web import app, set_error
 from backend.client import client
 from internal.log import log_error, log_warning
 
-REMOTE_VALUE_FILE = "/eraz/eraz_values.csv"
+REMOTE_VALUE_FILE = "/eraz2/eraz_values.csv"
 LOCAL_TEMP_FILE = "temp_eraz_values.csv"
 
 def ensure_eraz_directory():
-    if not client.check("/eraz"):
-        client.mkdir("/eraz")
+    if not client.check("/eraz2"):
+        client.mkdir("/eraz2")
 
 def ensure_value_file():
     if not client.check(REMOTE_VALUE_FILE):

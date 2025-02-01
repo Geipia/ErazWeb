@@ -24,7 +24,7 @@ class User:
 
 
 class UserManager:
-    def __init__(self, filepath='/eraz/users.csv'):
+    def __init__(self, filepath='/eraz2/users.csv'):
         self.filepath = filepath
         self.users = self.load_users()
 
@@ -90,7 +90,7 @@ class Wallet:
 
 
 class WalletManager:
-    def __init__(self, filepath='/eraz/wallets.csv'):
+    def __init__(self, filepath='/eraz2/wallets.csv'):
         self.filepath = filepath
         self.wallets = self.load_wallets()
 
@@ -157,7 +157,7 @@ class Block:
 
 
 class Blockchain:
-    def __init__(self, filepath='/eraz/blockchain.csv', mined_ids_filepath='/eraz/mined_eraz_ids.csv'):
+    def __init__(self, filepath='/eraz2/blockchain.csv', mined_ids_filepath='/eraz2/mined_eraz_ids.csv'):
         self.chain = []
         self.total_mined_eraz = 0
         self.filepath = filepath
@@ -227,10 +227,10 @@ class Blockchain:
 def ensure_files_exist():
     """Ensure that necessary CSV files exist with appropriate headers."""
     files_to_check = {
-        '/eraz/mined_eraz_ids.csv': ['eraz_id'],
-        '/eraz/blockchain.csv': ['eraz_id', 'previous_hash', 'hash', 'transactions'],
-        '/eraz/users.csv': ['user_id', 'password_hash'],
-        '/eraz/wallets.csv': ['wallet_id', 'balance']
+        '/eraz2/mined_eraz_ids.csv': ['eraz_id'],
+        '/eraz2/blockchain.csv': ['eraz_id', 'previous_hash', 'hash', 'transactions'],
+        '/eraz2/users.csv': ['user_id', 'password_hash'],
+        '/eraz2/wallets.csv': ['wallet_id', 'balance']
     }
 
     for filepath, headers in files_to_check.items():
