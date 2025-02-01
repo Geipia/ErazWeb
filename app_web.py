@@ -6,15 +6,35 @@ from backend.backend_db import *
 from consts import *
 from backend.backend_methods import *
 import functools
-
+from webdav3.client import Client
+import os
+from dotenv import load_dotenv
+from internal.log import log_error, log_info
 
 app = Flask(__name__)
 app.secret_key = 'ef88e21a-31bb-4448-b9a4-c2f6759c2778'
 ERROR = False
 
 
+# Load .env file
+load_dotenv()
+
+DATABASE_URL = os.getenv("DATABASE_URL")
+DATABASE_USERNAME = os.getenv("DATABASE_USERNAME")
+DATABSE_PASSWORD = os.getenv("DATABSE_PASSWORD")
+
+WEBDAV_OPTIONS = {
+    "webdav_hostname": DATABASE_URL,
+    "webdav_login": DATABSE_PASSWORD,  # Replace with your Storage Box username
+    "webdav_password": DATABSE_PASSWORD,  # Replace with your Storage Box password
+}
+client = Client(WEBDAV_OPTIONS)
+
+
 def set_error(value: bool):
     global ERROR
+    if value:
+        log_error("Erreur fatale!")
     ERROR = value
 
 
@@ -41,6 +61,7 @@ def developerhome():
     user_id = session.get('user_id')
     if user_id:
         wallets = wallet_manager.get_user_wallets(user_id)
+        log_info(f"Dev page accessed! User ID: {user_id}")
         return render_template('developerhome.html', wallets=wallets.values(), blockchain=blockchain.chain)
     else:
         return redirect(url_for('developer'))
@@ -242,8 +263,10 @@ def fatal_error():
 
 
 if __name__ == '__main__':
+    log_info("Démarrage du serveur...")
     user_manager = UserManager()
     wallet_manager = WalletManager()
     blockchain = Blockchain()
     blockchain.load_chain()
+    log_info("Serveur démarré.")
     app.run(debug=False, port=5000)

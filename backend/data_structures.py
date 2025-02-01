@@ -1,9 +1,11 @@
 from werkzeug.security import generate_password_hash, check_password_hash
-import csv
-import os
 import uuid
 from consts import *
-from backend.backend_methods import *
+from backend.backend_methods import read_csv_file, save_csv_file
+import hashlib
+import os
+import csv
+from backend.client import client
 
 class User:
     def __init__(self, user_id, password_hash):
@@ -22,7 +24,7 @@ class User:
 
 
 class UserManager:
-    def __init__(self, filepath='users.csv'):
+    def __init__(self, filepath='/eraz/users.csv'):
         self.filepath = filepath
         self.users = self.load_users()
 
@@ -42,19 +44,19 @@ class UserManager:
         return user_id in self.users
 
     def save_users(self):
-        with open(self.filepath, 'w', newline='') as csvfile:
-            fieldnames = ['user_id', 'password_hash']
-            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-            writer.writeheader()
-            for user in self.users.values():
-                writer.writerow(user.to_dict())
+        data = [user.to_dict() for user in self.users.values()]
+        save_csv_file(self.filepath, data)
 
     def load_users(self):
-        if os.path.exists(self.filepath):
-            with open(self.filepath, 'r') as csvfile:
-                reader = csv.DictReader(csvfile)
-                return {row['user_id']: User.from_dict(row) for row in reader}
-        return {}
+        if not client.check(self.filepath):
+            self.create_file_with_headers(self.filepath, ['user_id', 'password_hash'])
+        data = read_csv_file(self.filepath)
+        return {row[0]: User.from_dict({'user_id': row[0], 'password_hash': row[1]}) for row in data[1:]} if data else {}
+
+    @staticmethod
+    def create_file_with_headers(filepath, headers):
+        data = [headers]
+        save_csv_file(filepath, data)
 
 
 class Wallet:
@@ -88,7 +90,7 @@ class Wallet:
 
 
 class WalletManager:
-    def __init__(self, filepath='wallets.csv'):
+    def __init__(self, filepath='/eraz/wallets.csv'):
         self.filepath = filepath
         self.wallets = self.load_wallets()
 
@@ -107,20 +109,19 @@ class WalletManager:
         return {wid: wallet for wid, wallet in self.wallets.items() if wallet.wallet_id.startswith(user_id)}
 
     def save_wallets(self):
-        with open(self.filepath, 'w', newline='') as csvfile:
-            fieldnames = ['wallet_id', 'balance']
-            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-            writer.writeheader()
-            for wallet in self.wallets.values():
-                writer.writerow(wallet.to_dict())
+        data = [wallet.to_dict() for wallet in self.wallets.values()]
+        save_csv_file(self.filepath, data)
 
     def load_wallets(self):
-        if os.path.exists(self.filepath):
-            with open(self.filepath, 'r') as csvfile:
-                reader = csv.DictReader(csvfile)
-                return {row['wallet_id']: Wallet.from_dict(row) for row in reader}
-        return {}
+        if not client.check(self.filepath):
+            self.create_file_with_headers(self.filepath, ['wallet_id', 'balance'])
+        data = read_csv_file(self.filepath)
+        return {row[0]: Wallet.from_dict({'wallet_id': row[0], 'balance': row[1]}) for row in data[1:]} if data else {}
 
+    @staticmethod
+    def create_file_with_headers(filepath, headers):
+        data = [headers]
+        save_csv_file(filepath, data)
 
 class Block:
     def __init__(self, eraz_id, previous_hash, transactions=None):
@@ -156,7 +157,7 @@ class Block:
 
 
 class Blockchain:
-    def __init__(self, filepath='blockchain.csv', mined_ids_filepath='mined_eraz_ids.csv'):
+    def __init__(self, filepath='/eraz/blockchain.csv', mined_ids_filepath='/eraz/mined_eraz_ids.csv'):
         self.chain = []
         self.total_mined_eraz = 0
         self.filepath = filepath
@@ -166,18 +167,16 @@ class Blockchain:
 
     def save_mined_eraz_id(self, eraz_id):
         """Saves a mined Eraz ID to the persistent storage."""
-        with open(self.mined_ids_filepath, 'a', newline='') as csvfile:
-            writer = csv.writer(csvfile)
-            writer.writerow([eraz_id])
+        data = [[eraz_id]]
+        save_csv_file(self.mined_ids_filepath, data)
         self.mined_eraz_ids.add(eraz_id)
 
     def load_mined_eraz_ids(self):
         """Loads mined Eraz IDs from the persistent storage."""
-        if os.path.exists(self.mined_ids_filepath):
-            with open(self.mined_ids_filepath, 'r') as csvfile:
-                reader = csv.reader(csvfile)
-                return {int(row[0]) for row in reader}
-        return set()
+        data = read_csv_file(self.mined_ids_filepath)
+        if data:
+            data = data[1:]  # Skip header row
+        return {int(row[0]) for row in data} if data else set()
 
     def eraz_id_exists(self, eraz_id):
         """Check if an Eraz ID has already been mined."""
@@ -198,20 +197,18 @@ class Blockchain:
         return self.chain[-1]
 
     def save_chain(self):
-        with open(self.filepath, 'w', newline='') as csvfile:
-            fieldnames = ['eraz_id', 'previous_hash', 'hash', 'transactions']
-            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-            writer.writeheader()
-            for block in self.chain:
-                writer.writerow(block.to_dict())
+        data = [block.to_dict() for block in self.chain]
+        save_csv_file(self.filepath, data)
 
     def load_chain(self):
-        if os.path.exists(self.filepath):
-            with open(self.filepath, 'r') as csvfile:
-                reader = csv.DictReader(csvfile)
-                self.chain = [Block.from_dict(row) for row in reader]
-                self.total_mined_eraz = sum([INITIAL_REWARD / (2 ** (i // REWARD_HALVING_INTERVAL))
-                                             for i in range(len(self.chain))])
+        data = read_csv_file(self.filepath)
+        if data:
+            headers = data[0]
+            self.chain = [
+                Block.from_dict(dict(zip(headers, row))) for row in data[1:]
+            ]
+            self.total_mined_eraz = sum([INITIAL_REWARD / (2 ** (i // REWARD_HALVING_INTERVAL))
+                                         for i in range(len(self.chain))])
         else:
             self.chain = [self.create_genesis_block()]
 
@@ -226,3 +223,25 @@ class Blockchain:
         new_block.add_transaction(f"{sender_wallet_id} envoie {amount} Eraz à {recipient_wallet_id}")
         self.chain.append(new_block)
         self.save_chain()
+
+def ensure_files_exist():
+    """Ensure that necessary CSV files exist with appropriate headers."""
+    files_to_check = {
+        '/eraz/mined_eraz_ids.csv': ['eraz_id'],
+        '/eraz/blockchain.csv': ['eraz_id', 'previous_hash', 'hash', 'transactions'],
+        '/eraz/users.csv': ['user_id', 'password_hash'],
+        '/eraz/wallets.csv': ['wallet_id', 'balance']
+    }
+
+    for filepath, headers in files_to_check.items():
+        if not client.check(filepath):
+            UserManager.create_file_with_headers(filepath, headers)
+
+
+# Ensure necessary files exist before starting the server
+ensure_files_exist()
+
+# Initialize other components (e.g., UserManager, WalletManager, Blockchain)
+user_manager = UserManager()
+wallet_manager = WalletManager()
+blockchain = Blockchain()

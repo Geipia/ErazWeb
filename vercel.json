@@ -1,0 +1,20 @@
+{
+    "version": 2,
+    "builds": [
+      {
+        "src": "requirements.txt",
+        "use": "@vercel/static"
+      },
+      {
+        "src": "app_web.py",
+        "use": "@vercel/python"
+      }
+    ],
+    "routes": [
+      {
+        "src": "/(.*)",
+        "dest": "app_web.py"
+      }
+    ]
+  }
+  
