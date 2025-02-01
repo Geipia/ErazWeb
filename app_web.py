@@ -5,6 +5,7 @@ import base64
 from backend.backend_db import *
 from consts import *
 from backend.backend_methods import *
+from internal.log import log_error, log_info
 import functools
 
 app = Flask(__name__)
@@ -13,6 +14,8 @@ ERROR = False
 
 def set_error(value: bool):
     global ERROR
+    if value:
+        log_error('FATAL ERROR: Eraz value can never be negative.')
     ERROR = value
 
 
@@ -157,16 +160,18 @@ def is_eraz_valid(eraz_id, nonce, wallet_id) -> bool:
 @app.route('/mine', methods=['POST'])
 def mine():
     if ERROR:
-        app.redirect('/error')
-        return
+        return redirect(url_for('error'))
     user_id = session.get('user_id')
     if user_id:
         wallet_id = request.form['wallet_id']
         eraz_id = int(request.form['eraz_id'])
         nonce = int(request.form['nonce'])
 
-        is_eraz_valid(eraz_id, nonce, wallet_id)
-    return redirect(url_for('index'))
+        if is_eraz_valid(eraz_id, nonce, wallet_id):
+            flash(f'Eraz ID {eraz_id} successfully mined by {wallet_id}.')
+        else:
+            flash(f'Failed to mine Eraz ID {eraz_id}.')
+    return redirect(url_for('developerhome'))
 
 
 @app.route('/transaction', methods=['POST'])
@@ -240,8 +245,10 @@ def fatal_error():
 
 
 if __name__ == '__main__':
+    log_info('Starting Eraz web application...')
     user_manager = UserManager()
     wallet_manager = WalletManager()
     blockchain = Blockchain()
     blockchain.load_chain()
+    log_info('Eraz web application started.')
     app.run(debug=False, port=5000, host="0.0.0.0")
